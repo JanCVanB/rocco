@@ -25,6 +25,7 @@ postSubcommand =
         )
     |> Arg.subCommand "post"
 
+respond : Str -> Str
 respond = \request ->
     # TODO: Upgrade request parsing with `Json` library
     after = \text, mark ->

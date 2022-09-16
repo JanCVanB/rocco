@@ -1,1 +1,7 @@
 rocco
+
+server
+
+**/.terraform/*
+*.tfstate
+*.tfstate.*
