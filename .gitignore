@@ -1,7 +1,5 @@
-rocco
-
+# Go
 server
 
-**/.terraform/*
-*.tfstate
-*.tfstate.*
+# Roc
+rocco
