@@ -1,6 +1,6 @@
 app "rocco"
     packages { pf: "roc/examples/interactive/cli-platform/main.roc" }
-    imports [pf.Arg, pf.Stdout, pf.Task]
+    imports [Json, pf.Arg, pf.Stdout, pf.Task]
     provides [main] to pf
 
 main : List Str -> Task.Task {} [] [Write [Stdout]]
@@ -27,25 +27,12 @@ postSubcommand =
 
 respond : Str -> Str
 respond = \request ->
-    # TODO: Upgrade request parsing with `Json` library
-    after = \text, mark ->
-        when Str.splitFirst text mark is
-            Ok x -> x.after
-            Err _ -> ""
-    before = \text, mark ->
-        # Remove this outer `when` if this issue is fixed:
-        # https://github.com/roc-lang/roc/issues/4064
-        when text is
-            "" -> ""
-            _ ->
-                when Str.splitFirst text mark is
-                    Ok x -> x.before
-                    Err _ -> text
-    message =
-        request
-        |> after "\"content\": \""
-        |> before "\""
-    "{\"content\": \"I heard you say `\(message)` 🙂\"}"
+    reply = when Decode.fromBytes request Json.fromUtf8 is
+        Ok { message: { content } } ->
+            "I heard you say `\(content)` 🙂"
+        _ ->
+            "Sorry, I couldn't understand that. ☹️"
+    """{ "content": "\(reply)" }"""
 
 run = \command ->
     when command is
