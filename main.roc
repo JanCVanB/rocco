@@ -25,8 +25,8 @@ postSubcommand =
         )
     |> Arg.subCommand "post"
 
-respond : Str -> Str
-respond = \request ->
+parse : Str -> Str
+parse = \request ->
     # TODO: Upgrade request parsing with `Json` library
     after = \text, mark ->
         when Str.splitFirst text mark is
@@ -41,12 +41,31 @@ respond = \request ->
                 when Str.splitFirst text mark is
                     Ok x -> x.before
                     Err _ -> text
-    message =
-        request
-        |> after "\"content\": \""
-        |> before "\""
-    "{\"content\": \"I heard you say `\(message)` 🙂\"}"
+    request
+    |> after "\"content\": \""
+    |> before "\""
+
+reply : Str -> Str
+reply = \message ->
+    words = message |> Str.split " "
+    mode = words |> List.get 1
+    args = words |> List.drop 2
+    when mode is
+        Ok "echo" -> args |> Str.joinWith " "
+        Ok "issue" ->
+            when args |> List.get 0 is
+                Ok i -> "https://github.com/roc-lang/roc/issues/\(i)"
+                Err _ -> "Which issue do you want?\\nFor example, '@**rocco** issue 664' :smile:"
+        Ok "pr" ->
+            when args |> List.get 0 is
+                Ok p -> "https://github.com/roc-lang/roc/pulls/\(p)"
+                Err _ -> "Which issue do you want?\\nFor example, '@**rocco** issue 664' :smile:"
+        Ok "help" -> "Hi, I'm @**rocco**, a Roc chat bot!\\nSubcommands: `echo`, `help`, `issue`, `pr`\\nSee https://github.com/JanCVanB/rocco :smile:"
+        Ok _ -> "Sorry, I don't understand.\\nTry '@**rocco** help' :smile:"
+        Err _ -> "Hi, I'm @**rocco**, a Roc chat bot!\\nSend '@**rocco** help' to learn more about me. :smile:"
+
+formatResponse = \message -> "{ \"content\": \"\(message)\" }"
 
 run = \command ->
     when command is
-        Post request -> respond request
+        Post request -> request |> parse |> reply |> formatResponse
